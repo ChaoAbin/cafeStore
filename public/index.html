@@ -18,18 +18,67 @@
 
     <script>
         $( document ).ready(function() {
-            var user = $.ajaxTo('users/userList', {});
+            var user = $.ajaxTo('GET','/user', {});
             $.userList(user);
 
-            $("input[name=submit]").click($.userAdd);
+            //$("input[name=submit]").click($.userAdd);
         });
-        $.ajaxTo = function(url, data) {
+        /*
+        //get all
+        $.ajaxTo('GET','/user', {});
+        //get one
+        $.ajaxTo('GET','/user/:id', {});
+        //add list
+        $.ajaxTo('POST','/user', [{
+                                        name: 'Peter Quill 1',
+                                        username: 'test_1',
+                                        password: '1234',
+                                        admin: true
+                                    },{
+                                        name: 'Peter Quill 2',
+                                        username: 'test_2',
+                                        password: '1234',
+                                        admin: true
+                                    }]);
+        //add one
+        $.ajaxTo('POST','/user/:id', {
+                                        name: 'Peter Quill 1',
+                                        username: 'test_1',
+                                        password: '1234',
+                                        admin: true
+                                    });
+        //modify list
+        $.ajaxTo('PUT','/user', [{
+                                        name: 'Peter Quill 1',
+                                        username: 'test_1',
+                                        password: '1234',
+                                        admin: true
+                                    },{
+                                        name: 'Peter Quill 2',
+                                        username: 'test_2',
+                                        password: '1234',
+                                        admin: true
+                                    }]);
+        //modify one
+        $.ajaxTo('PUT','/user/:id', {
+                                        name: 'Peter Quill 1',
+                                        username: 'test_1',
+                                        password: '1234',
+                                        admin: true
+                                    });
+        //delete all
+        $.ajaxTo('DELETE','/user', {});
+        //delete one
+        $.ajaxTo('DELETE','/user/:id', {});
+        */
+
+        $.ajaxTo = function(type, url, data) {
             var callback = {};
             $.ajax({
                 url: url,
                 async: false,
                 data: data,
-                type:"GET",
+                type: type,
                 dataType:'json',
                 success: function(data2){
                   callback = data2;
