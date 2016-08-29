@@ -9,7 +9,14 @@
 
     <!-- Bootstrap -->
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- React-15.3.1 >
+    <script src="javascripts/lib/react-15.3.1/react.min.js"></script>
+    <script src="javascripts/lib/react-15.3.1/react-dom.min.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script-->
 
+    <!-- Vue.js v2.0.0-rc.3 -->
+    <script src="javascripts/lib/vue/vue.js"></script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -17,9 +24,9 @@
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
 
     <script>
+        //VueJS ajax methods example: https://laracasts.com/discuss/channels/general-discussion/fetching-persisting-data-using-vuejs?page=1
         $( document ).ready(function() {
-            var user = $.ajaxTo('GET','/user', {});
-            $.userList(user);
+            $.userList();
 
             //$("input[name=submit]").click($.userAdd);
         });
@@ -90,11 +97,14 @@
             return callback;
         }
 
-        $.userList = function(user) {
-            $("#userList").html("");
-            for(var i=0;i<user.length;i++) {
-                $("#userList").append("<div id='"+user[i]['_id']+"' style='border: black solid 1px; padding: 5px;'>Name:"+user[i]['username']+", Email:"+user[i]['email']+"</div>");
-            }
+        $.userList = function() {
+            var users = $.ajaxTo('GET','/user', {});
+            $.userList = new Vue({
+              el: '#userList',
+              data: {
+                users: users
+              }
+            });
         }
 
         $.userAdd = function(e) {
@@ -111,14 +121,40 @@
             }
         }
     </script>
+        <style>
+            .user > p {
+                font-weight: bold;
+            }
+            .user > p > span {
+                font-weight: normal;
+                margin-left: 5px;
+            }
+            .user {
+                float: left;
+                padding: 5px 20px;
+                border: 1px solid black;
+                margin-left: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
   </head>
   <body>
-    <div id="userList"></div>
 
     <div>
       Username: <input type="text" name="username" placeholder="Enter Username">
       Email: <input type="email" name="email" placeholder="Enter Email">
       <input type="submit" name="submit" value="Submit">
     </div>
+
+    <div id="userList">
+        <div class="user" v-for="user in users" track-by="_id" style="border: 1px solid black; display: inline;">
+            <p>name:<span>{{user.name}}</span></p>
+            <p>age:<span>{{user.age}}</span></p>
+            <p>location:<span>{{user.location}}</span></p>
+            <p>created_at:<span>{{user.created_at}}</span></p>
+            <p>updated_at:<span>{{user.updated_at}}</span></p>
+        </div>
+    </div>
+
   </body>
 </html>
