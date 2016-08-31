@@ -17,144 +17,184 @@
 
     <!-- Vue.js v2.0.0-rc.3 -->
     <script src="javascripts/lib/vue/vue.js"></script>
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
 
     <script>
-        //VueJS ajax methods example: https://laracasts.com/discuss/channels/general-discussion/fetching-persisting-data-using-vuejs?page=1
-        $( document ).ready(function() {
-            $.userList();
-
-            //$("input[name=submit]").click($.userAdd);
-        });
-        /*
-        //get all
-        $.ajaxTo('GET','/user', {});
-        //get one
-        $.ajaxTo('GET','/user/:id', {});
-        //add list
-        $.ajaxTo('POST','/user', [{
-                                        name: 'Peter Quill 1',
-                                        username: 'test_1',
-                                        password: '1234',
-                                        admin: true
-                                    },{
-                                        name: 'Peter Quill 2',
-                                        username: 'test_2',
-                                        password: '1234',
-                                        admin: true
-                                    }]);
-        //add one
-        $.ajaxTo('POST','/user/:id', {
-                                        name: 'Peter Quill 1',
-                                        username: 'test_1',
-                                        password: '1234',
-                                        admin: true
-                                    });
-        //modify list
-        $.ajaxTo('PUT','/user', [{
-                                        name: 'Peter Quill 1',
-                                        username: 'test_1',
-                                        password: '1234',
-                                        admin: true
-                                    },{
-                                        name: 'Peter Quill 2',
-                                        username: 'test_2',
-                                        password: '1234',
-                                        admin: true
-                                    }]);
-        //modify one
-        $.ajaxTo('PUT','/user/:id', {
-                                        name: 'Peter Quill 1',
-                                        username: 'test_1',
-                                        password: '1234',
-                                        admin: true
-                                    });
-        //delete all
-        $.ajaxTo('DELETE','/user', {});
-        //delete one
-        $.ajaxTo('DELETE','/user/:id', {});
-        */
-
         $.ajaxTo = function(type, url, data) {
-            var callback = {};
+            var callback_data = {};
             $.ajax({
                 url: url,
                 async: false,
-                data: data,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data),
                 type: type,
                 dataType:'json',
-                success: function(data2){
-                  callback = data2;
+                success: function(data){
+                  callback_data = data;
                 },
                 error:function(e){ 
-                  callback = e;
+                  callback_data = e;
                 }
             });
-            return callback;
+            return callback_data;
         }
 
-        $.userList = function() {
-            var users = $.ajaxTo('GET','/user', {});
-            $.userList = new Vue({
-              el: '#userList',
-              data: {
-                users: users
-              }
+        $(document).ready(function() {
+            window.user = new Vue({
+                el: '#user',
+                data: {
+                    users: $.ajaxTo('GET','/user'),
+                    userAddForm: {},
+                    userModifyForm: {},
+
+                    displayAddForm: false,
+                    displayModifyForm: false
+                },
+                methods: {
+                    userList: function() {
+                        this.users = $.ajaxTo('GET','/user');
+                    },
+                    userListById: function(user) {
+                        $.ajaxTo('GET','/user/'+user['_id']);
+                    },
+                    userAdd: function() {
+                        $.ajaxTo('POST','/user', [this.userAddForm]);
+                        this.userList();
+                    },
+                    //@parmas userList array 使用者資料
+                    userAddList: function(userList) {
+                        $.ajaxTo('POST','/user', [userList]);
+                        this.userList();
+                    },
+                    userModify: function() {
+                        $.ajaxTo('PUT','/user/'+this.userModifyForm["_id"], this.userModifyForm);
+                        this.userList();
+                    },
+                    //@parmas userList array 使用者資料
+                    userModifyList: function(userList) {
+                        $.ajaxTo('PUT','/user', [userList]);
+                        this.userList();
+                    },
+                    userDelete: function(user) {
+                        $.ajaxTo('DELETE','/user/'+user['_id']);
+                        this.userList();
+                    },
+                    userDeleteAll: function() {
+                        var bol = confirm("Press a button!");
+                        if(bol) {
+                            $.ajaxTo('DELETE','/user');
+                            this.userList();
+                        }
+                    },
+
+                    addForm: function() {
+                        this.displayAddForm = !this.displayAddForm;
+                        this.displayModifyForm?this.displayModifyForm=!this.displayModifyForm:this.displayModifyForm;
+                    },
+                    modifyForm: function(user, e2) {
+                        this.displayAddForm?this.displayAddForm = !this.displayAddForm:this.displayAddForm;
+                        if(user['_id'] == this.userModifyForm['_id'] || !this.displayModifyForm) {
+                            this.displayModifyForm = !this.displayModifyForm;
+                        }
+
+                        for(key in user) {
+                            this.userModifyForm[key] = user[key];
+                        }
+                    },
+                }
             });
-        }
-
-        $.userAdd = function(e) {
-            console.log(e);
-            var data = {
-                username: $("input[name=username]").val(),
-                email: $("input[name=email]").val()
-            }
-            if($.ajaxTo('userAdd', data)) {
-                alert("新增成功");
-                $.userList($.ajaxTo('userList', {}));
-            } else {
-                alert("新增失敗");
-            }
-        }
+        });
     </script>
         <style>
             .user > p {
                 font-weight: bold;
+                display: inline;
             }
             .user > p > span {
                 font-weight: normal;
                 margin-left: 5px;
             }
             .user {
-                float: left;
                 padding: 5px 20px;
                 border: 1px solid black;
-                margin-left: 10px;
-                margin-bottom: 10px;
+                margin: 10px 0 0 10px;
+                position: relative;
+                float: left;
+            }
+            .userForm {
+                border: 1px dotted black;
+                margin: 20px 0px;
+                padding: 10px;
+            }
+            .userForm > div{
+                margin: 10px;
             }
         </style>
   </head>
-  <body>
+  <body style="width: 1000px; margin: auto; left: 0px; right: 0px;">
+    <div id="user">
+        <button v-on:click="addForm" style="margin: 10px 0px;" type="button">add</button>
+        <button v-on:click="userDeleteAll" style="margin: 10px 0px;" type="button">deleteAll</button>
+        <div v-if="displayAddForm" class="userForm">
+            <h4>新增使用者</h4>
+            <div>
+                Username: <input v-model="userAddForm.username" type="text" name="username" placeholder="Enter Username">
+            </div>
+            <div>
+                password: <input v-model="userAddForm.password" type="password" name="password" placeholder="Enter password">
+            </div>
+            <div>
+                name: <input v-model="userAddForm.name" type="text" name="name" placeholder="Enter name">
+            </div>
+            <div>
+                location: <input v-model="userAddForm.location" type="text" name="location" placeholder="Enter location">
+            </div>
+            <div>
+                age: <input v-model="userAddForm.age" type="text" name="age" placeholder="Enter age">
+            </div>
+            <button v-on:click="userAdd" style="margin: 10px 0px;" type="button">Submit</button>
+        </div>
 
-    <div>
-      Username: <input type="text" name="username" placeholder="Enter Username">
-      Email: <input type="email" name="email" placeholder="Enter Email">
-      <input type="submit" name="submit" value="Submit">
-    </div>
-
-    <div id="userList">
-        <div class="user" v-for="user in users" track-by="_id" style="border: 1px solid black; display: inline;">
-            <p>name:<span>{{user.name}}</span></p>
-            <p>age:<span>{{user.age}}</span></p>
-            <p>location:<span>{{user.location}}</span></p>
-            <p>created_at:<span>{{user.created_at}}</span></p>
-            <p>updated_at:<span>{{user.updated_at}}</span></p>
+        <div v-if="displayModifyForm" class="userForm">
+            <h4>修改使用者</h4>
+            <div>
+                Username: <input v-model="userModifyForm.username" type="text" name="username" placeholder="Enter Username">
+            </div>
+            <div>
+                password: <input v-model="userModifyForm.password" type="password" name="password" placeholder="Enter password">
+            </div>
+            <div>
+                name: <input v-model="userModifyForm.name" type="text" name="name" placeholder="Enter name">
+            </div>
+            <div>
+                location: <input v-model="userModifyForm.location" type="text" name="location" placeholder="Enter location">
+            </div>
+            <div>
+                age: <input v-model="userModifyForm.age" type="text" name="age" placeholder="Enter age">
+            </div>
+            <button v-on:click="userModify" style="margin: 10px 0px;" type="button">Submit</button>
+        </div>
+        
+        <div id="userList" style="border: 1px dotted black; padding-bottom: 10px;">
+            <div class="user" v-for="user in users" track-by="_id">
+                <p>name:<span>{{user.name}}</span></p>
+                <br>
+                <p>age:<span>{{user.age}}</span></p>
+                <br>
+                <p>location:<span>{{user.location}}</span></p>
+                <br>
+                <p>created_at:<span>{{user.created_at}}</span></p>
+                <br>
+                <p>updated_at:<span>{{user.updated_at}}</span></p>
+                <br>
+                <button v-on:click="modifyForm(user, $event)" style="margin: 10px 0px;" type="button">modify</button>
+                <button v-on:click="userDelete(user, $event)" style="margin: 10px 0px;" type="button">delete</button>
+            </div>
+            <div class="clearfix"></div>
         </div>
     </div>
-
   </body>
 </html>

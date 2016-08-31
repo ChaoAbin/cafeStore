@@ -8,7 +8,7 @@ var User = require('../model/userM');
 router.get('/', function (req, res) {
 	User.find({}, function(err, users) {
 		var userMap = [];
-
+		console.log(users);
 		users.forEach(function(user) {
 			userMap.push(user);
 		});
@@ -24,8 +24,8 @@ router.get('/', function (req, res) {
 router.get('/:id', function (req, res) {
 	User.findById(req.params.id, function(err, user) {
 	if (err)
-		  res.send(err);
-	  res.send(user);
+		res.send(err);
+		res.send(user);
 	});
 });
 
